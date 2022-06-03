@@ -5,6 +5,7 @@ from PIL import Image
 from scipy.ndimage import convolve1d
 from torch.utils import data
 import torchvision.transforms as transforms
+from sklearn.utils import shuffle
 
 from utils import get_lds_kernel_window
 
@@ -18,7 +19,6 @@ class IMDBWIKI(data.Dataset):
         self.data_dir = data_dir
         self.img_size = img_size
         self.split = split
-
         self.weights = self._prepare_weights(reweight=reweight, lds=lds, lds_kernel=lds_kernel, lds_ks=lds_ks, lds_sigma=lds_sigma)
 
     def __len__(self):
