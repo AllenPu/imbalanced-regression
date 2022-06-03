@@ -135,13 +135,16 @@ def main():
     df_train_28, df_val_28, df_test_28 = df_train[df_train['age'] == 28], df_val[df_val['age'] == 28], df_test[df_test['age'] == 28]
     # train
     # use 1000 27 and 1000 28 to train
+    df_train_26 = shuffle(df_train_26)
+    df_train_27 = shuffle(df_train_27)
+    df_train_28 = shuffle(df_train_28)
     df_train = pd.concat([df_train_26[:args.train_number], df_train_27[:1000], df_train_28[:1000]])
     df_train = shuffle(df_train)
     # test
-    df_test = pd.concat([df_test_26, df_test_27, df_test_28])
+    df_test = pd.concat([df_test_27, df_test_28])
     df_test = shuffle(df_test)
     # val
-    df_val = pd.concat([df_val_26, df_val_27, df_val_28])
+    df_val = pd.concat([df_val_27, df_val_28])
     df_val = shuffle(df_val)
     #    
 
@@ -407,13 +410,13 @@ def shot_metrics(preds, labels, train_labels, many_shot_thr=100, low_shot_thr=20
     shot_dict = defaultdict(dict)
     shot_dict['many']['mse'] = np.sum(many_shot_mse) / np.sum(many_shot_cnt)
     shot_dict['many']['l1'] = np.sum(many_shot_l1) / np.sum(many_shot_cnt)
-    shot_dict['many']['gmean'] = gmean(np.hstack(many_shot_gmean), axis=None).astype(float)
+    shot_dict['many']['gmean'] = 0 #gmean(np.hstack(many_shot_gmean), axis=None).astype(float)
     shot_dict['median']['mse'] = np.sum(median_shot_mse) / np.sum(median_shot_cnt)
     shot_dict['median']['l1'] = np.sum(median_shot_l1) / np.sum(median_shot_cnt)
-    shot_dict['median']['gmean'] = gmean(np.hstack(median_shot_gmean), axis=None).astype(float)
+    shot_dict['median']['gmean'] = 0 #gmean(np.hstack(median_shot_gmean), axis=None).astype(float)
     shot_dict['low']['mse'] = np.sum(low_shot_mse) / np.sum(low_shot_cnt)
     shot_dict['low']['l1'] = np.sum(low_shot_l1) / np.sum(low_shot_cnt)
-    shot_dict['low']['gmean'] = gmean(np.hstack(low_shot_gmean), axis=None).astype(float)
+    shot_dict['low']['gmean'] = 0 #gmean(np.hstack(low_shot_gmean), axis=None).astype(float)
 
     return shot_dict
 
