@@ -81,4 +81,4 @@ def train():
             loss = criterion_mse(outputs, targets)
             loss.backwards()
             opt.step()
-
+    return model , loss
