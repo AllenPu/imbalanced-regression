@@ -10,6 +10,6 @@ def resent18_regression():
         nn.Linear(fc_inputs, 256),
         nn.ReLU(),
         nn.Dropout(),
-        nn.Linear(256, 100)
+        nn.Linear(256, 1)
     )
     return model
