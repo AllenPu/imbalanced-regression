@@ -16,7 +16,7 @@ args, unknown = parser.parse_known_args()
 
 args.start_epoch, args.best_loss = 0, 1e5
 
-def get_dataset():
+def get_dataset(pattern = 'cls'):
     print('=====> Preparing data...')
     print(f"File (.csv): {args.dataset}.csv")
     df = pd.read_csv(os.path.join(args.data_dir, f"{args.dataset}.csv"))
@@ -25,23 +25,24 @@ def get_dataset():
     # limit the age range from 26 to 28
     # only limit the 26,27,28 (6562(6262), 6414(6114), 6742(6442) samples respectively(train))
     #
-    df_train_26, df_val_26, df_test_26 = df_train[df_train['age'] == 26], df_val[df_val['age'] == 26], df_test[df_test['age'] == 26]
-    df_train_27, df_val_27, df_test_27 = df_train[df_train['age'] == 27], df_val[df_val['age'] == 27], df_test[df_test['age'] == 27]
-    df_train_28, df_val_28, df_test_28 = df_train[df_train['age'] == 28], df_val[df_val['age'] == 28], df_test[df_test['age'] == 28]
-    # train
-    # use 1000 27 and 1000 28 to train
-    df_train_26 = shuffle(df_train_26)
-    df_train_27 = shuffle(df_train_27)
-    df_train_28 = shuffle(df_train_28)
-    df_train = pd.concat([df_train_26[:args.train_number], df_train_27[:1000], df_train_28[:1000]])
-    df_train = shuffle(df_train)
-    # test
-    df_test = pd.concat([df_test_27, df_test_28])
-    df_test = shuffle(df_test)
-    # val
-    df_val = pd.concat([df_val_27, df_val_28])
-    df_val = shuffle(df_val)
-    #    
+    if pattern != 'cls':
+        df_train_26, df_val_26, df_test_26 = df_train[df_train['age'] == 26], df_val[df_val['age'] == 26], df_test[df_test['age'] == 26]
+        df_train_27, df_val_27, df_test_27 = df_train[df_train['age'] == 27], df_val[df_val['age'] == 27], df_test[df_test['age'] == 27]
+        df_train_28, df_val_28, df_test_28 = df_train[df_train['age'] == 28], df_val[df_val['age'] == 28], df_test[df_test['age'] == 28]
+        # train
+        # use 1000 27 and 1000 28 to train
+        df_train_26 = shuffle(df_train_26)
+        df_train_27 = shuffle(df_train_27)
+        df_train_28 = shuffle(df_train_28)
+        df_train = pd.concat([df_train_26[:args.train_number], df_train_27[:1000], df_train_28[:1000]])
+        df_train = shuffle(df_train)
+        # test
+        df_test = pd.concat([df_test_27, df_test_28])
+        df_test = shuffle(df_test)
+        # val
+        df_val = pd.concat([df_val_27, df_val_28])
+        df_val = shuffle(df_val)
+        #    
 
     train_labels = df_train['age']
 
@@ -65,12 +66,16 @@ def get_model():
     model = resent18_regression()
     return model
 
-def train():
+def train_step(train_loader, pattern = 'cls'):
     if args.gpu is not None:
         print(f"Use GPU: {args.gpu} for training")
     train_loader, test_loader, _ = get_dataset()
     model = get_model()
-    criterion_mse = nn.MSELoss()
+    if pattern == 'reg':
+        criterion = nn.MSELoss()
+    elif pattern == 'cls':
+        criterion = nn.CELoss()
+
     opt = optim.SGD(model.parameters(), lr=args.lr, weight_decay=5e-4)
     # train
     model.train()
@@ -78,7 +83,23 @@ def train():
         for idx, (inputs, targets, weights) in enumerate(train_loader):
             inputs, targets = inputs.cuda(non_blocking=True), targets.cuda(non_blocking=True)
             outputs = model(inputs)
-            loss = criterion_mse(outputs, targets)
+            loss = criterion(outputs, targets)
             loss.backwards()
             opt.step()
     return model , loss
+
+def test_step(model, test_loader):
+    criterion_mse = nn.MSELoss()
+    losses_all = []
+    model.eval()
+    with torch.no_grad():
+        for idx, (inputs, targets) in enumerate(test_loader):
+            inputs, targets = inputs.cuda(non_blocking=True), targets.cuda(non_blocking=True)
+            outputs = model(inputs)
+            loss = criterion_mse(outputs, targets)
+            losses_all.append(loss.item())
+    return max(losses_all)
+
+
+
+
