@@ -1,5 +1,5 @@
 import argparse
-from resnet18 import resent18_regression
+from resnet18 import resent18_regression, resnet18_cls
 from sklearn.utils import shuffle
 from torch.utils.data import DataLoader
 import torch.nn as nn
@@ -62,8 +62,11 @@ def get_dataset(leave_three_train = False):
     print(f"Test data size: {len(test_dataset)}")
     return train_loader, test_loader, val_loader
 
-def get_model():
-    model = resent18_regression()
+def get_model(pattern = 'cls'):
+    if pattern == 'reg' :
+        model = resent18_regression()
+    else:
+        model = resnet18_cls()
     return model
 
 def train_step(train_loader, pattern = 'cls'):
