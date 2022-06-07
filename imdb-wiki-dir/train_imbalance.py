@@ -91,12 +91,16 @@ def train_step(train_loader, pattern = 'cls'):
 def test_step(model, test_loader):
     criterion_mse = nn.MSELoss()
     losses_all = []
+    maxk = max(topk)
     model.eval()
     with torch.no_grad():
         for idx, (inputs, targets) in enumerate(test_loader):
             inputs, targets = inputs.cuda(non_blocking=True), targets.cuda(non_blocking=True)
             outputs = model(inputs)
-            loss = criterion_mse(outputs, targets)
+            # if indices starts from 0
+            #output_hat = torch.max(outputs, 1).indices + 1
+            _, pred = outputs.topk(maxk, 1, True, True)
+            loss = criterion_mse(pred, targets)
             losses_all.append(loss.item())
     return max(losses_all)
 
