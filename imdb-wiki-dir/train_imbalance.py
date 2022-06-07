@@ -16,7 +16,7 @@ args, unknown = parser.parse_known_args()
 
 args.start_epoch, args.best_loss = 0, 1e5
 
-def get_dataset(pattern = 'cls'):
+def get_dataset(leave_three_train = False):
     print('=====> Preparing data...')
     print(f"File (.csv): {args.dataset}.csv")
     df = pd.read_csv(os.path.join(args.data_dir, f"{args.dataset}.csv"))
@@ -25,7 +25,7 @@ def get_dataset(pattern = 'cls'):
     # limit the age range from 26 to 28
     # only limit the 26,27,28 (6562(6262), 6414(6114), 6742(6442) samples respectively(train))
     #
-    if pattern != 'cls':
+    if leave_three_train:
         df_train_26, df_val_26, df_test_26 = df_train[df_train['age'] == 26], df_val[df_val['age'] == 26], df_test[df_test['age'] == 26]
         df_train_27, df_val_27, df_test_27 = df_train[df_train['age'] == 27], df_val[df_val['age'] == 27], df_test[df_test['age'] == 27]
         df_train_28, df_val_28, df_test_28 = df_train[df_train['age'] == 28], df_val[df_val['age'] == 28], df_test[df_test['age'] == 28]
