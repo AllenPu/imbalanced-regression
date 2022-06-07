@@ -75,6 +75,8 @@ def train_step(train_loader, pattern = 'cls'):
         criterion = nn.MSELoss()
     elif pattern == 'cls':
         criterion = nn.CELoss()
+    else:
+        print(" no training patterns definied ")
 
     opt = optim.SGD(model.parameters(), lr=args.lr, weight_decay=5e-4)
     # train
@@ -88,7 +90,7 @@ def train_step(train_loader, pattern = 'cls'):
             opt.step()
     return model , loss
 
-def test_step(model, test_loader):
+def test_step(model, test_loader, pattern = 'cls'):
     criterion_mse = nn.MSELoss()
     losses_all = []
     maxk = max(topk)
@@ -99,7 +101,10 @@ def test_step(model, test_loader):
             outputs = model(inputs)
             # if indices starts from 0
             #output_hat = torch.max(outputs, 1).indices + 1
-            _, pred = outputs.topk(maxk, 1, True, True)
+            if pattern == 'cls':
+                _, pred = outputs.topk(maxk, 1, True, True)
+            else:
+                pred = outputs
             loss = criterion_mse(pred, targets)
             losses_all.append(loss.item())
     return max(losses_all)
