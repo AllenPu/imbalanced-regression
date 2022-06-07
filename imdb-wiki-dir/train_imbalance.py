@@ -1,4 +1,5 @@
 import argparse
+from mimetypes import init
 from resnet18 import resent18_regression, resnet18_cls
 from sklearn.utils import shuffle
 from torch.utils.data import DataLoader
@@ -86,7 +87,7 @@ def train_step(train_loader, pattern = 'cls'):
     # train
     model.train()
     for epoch in range(100):
-        for idx, (inputs, targets, weights) in enumerate(train_loader):
+        for idx, (inputs, targets) in enumerate(train_loader):
             inputs, targets = inputs.cuda(non_blocking=True), targets.cuda(non_blocking=True)
             outputs = model(inputs)
             loss = criterion(outputs, targets)
@@ -112,6 +113,16 @@ def test_step(model, test_loader, pattern = 'cls'):
             loss = criterion_mse(pred, targets)
             losses_all.append(loss.item())
     return max(losses_all)
+
+
+if __name__ == '__main__':
+    args = parser.parse_args()
+    random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    train_cls_loader, test_cls_loader, val_cls_loader = get_dataset()
+    train_reg_loader, test_reg_loader, val_reg_loader = get_dataset()
+    model_cls, _ = train_step(train_cls_loader, 'cls')
+    model_reg, _ = train_step(train_reg_loader, 'reg')
 
 
 
