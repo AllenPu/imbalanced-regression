@@ -67,6 +67,7 @@ def get_model(pattern = 'cls'):
         model = resent18_regression()
     else:
         model = resnet18_cls()
+    model = torch.nn.DataParallel(model).cuda()
     return model
 
 def train_step(train_loader, pattern = 'cls'):
