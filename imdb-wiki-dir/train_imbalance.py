@@ -99,11 +99,13 @@ def get_model(pattern = 'cls'):
     model = torch.nn.DataParallel(model).cuda()
     return model
 
-def train_step(train_loader, pattern = 'cls'):
+def train_step(train_loader, pattern = 'cls', dual = False):
     if args.gpu is not None:
         print(f"Use GPU: {args.gpu} for training")
-    train_loader, test_loader, _ = get_dataset()
-    model = get_model()
+
+    model = get_model(pattern)
+    opt = optim.SGD(model.parameters(), lr=args.lr, weight_decay=5e-4)
+
     if pattern == 'reg':
         criterion = nn.MSELoss()
     elif pattern == 'cls':
@@ -111,16 +113,36 @@ def train_step(train_loader, pattern = 'cls'):
     else:
         print(" no training patterns definied ")
 
-    opt = optim.SGD(model.parameters(), lr=args.lr, weight_decay=5e-4)
-    # train
-    model.train()
-    for epoch in range(100):
-        for idx, (inputs, targets) in enumerate(train_loader):
-            inputs, targets = inputs.cuda(non_blocking=True), targets.cuda(non_blocking=True)
-            outputs = model(inputs)
-            loss = criterion(outputs, targets)
-            loss.backwards()
-            opt.step()
+    if dual:
+        model_reg = get_model('cls')
+        model_cls = get_model('reg')
+        criterion_reg = nn.MSELoss()
+        criterion_cls = nn.CELoss()
+        opt_cls = optim.SGD(model_cls.parameters(), lr=args.lr, weight_decay=5e-4)
+        opt_reg = optim.SGD(model_reg.parameters(), lr=args.lr, weight_decay=5e-4)
+        model_reg.train()
+        model_cls.train()
+        for epoch in range(100):
+            for idx, (inputs, targets) in enumerate(train_loader):
+                inputs, targets = inputs.cuda(non_blocking=True), targets.cuda(non_blocking=True)
+                outputs_cls = model_cls(inputs)
+                outputs_reg = model_reg(inputs)
+                loss_cls = criterion_cls(outputs_cls, inputs)
+                loss_reg = criterion_reg(outputs_reg, inputs)
+                loss_cls.backwards()
+                loss_reg.backwards()
+                opt_cls.step()
+                opt_reg.step()
+    else:
+        # train
+        model.train()
+        for epoch in range(100):
+            for idx, (inputs, targets) in enumerate(train_loader):
+                inputs, targets = inputs.cuda(non_blocking=True), targets.cuda(non_blocking=True)
+                outputs = model(inputs)
+                loss = criterion(outputs, targets)
+                loss.backwards()
+                opt.step()
     return model , loss
 
 def test_step(model, test_loader, pattern = 'cls'):
