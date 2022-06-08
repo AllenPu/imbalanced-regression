@@ -17,53 +17,61 @@ args, unknown = parser.parse_known_args()
 
 args.start_epoch, args.best_loss = 0, 1e5
 
-def get_dataset(args, leave_three_train = False, leave_num = 3):
+def get_dataset(args, leave_out_train = False, leave_num = 11):
     print('=====> Preparing data...')
     print(f"File (.csv): {args.dataset}.csv")
     df = pd.read_csv(os.path.join(args.data_dir, f"{args.dataset}.csv"))
     df_train, df_val, df_test = df[df['split'] == 'train'], df[df['split'] == 'val'], df[df['split'] == 'test']
+    leave_list = [20,21,22,23,24,25,26,27,28,29,30]
     #
     # limit the age range from 26 to 28
     # only limit the 26,27,28 (6562(6262), 6414(6114), 6742(6442) samples respectively(train))
     #
-    if leave_three_train:
-        leave_list = [20,21,22,23,24,25,26,27,28,29,30]
-        train_list = []
-        test_list = []
-        val_list = []
-        for i in leave_num:
-            age_is = leave_list[i]
-            df_train_cur, df_val_cur, df_test_cur = df_train[df_train['age'] == \
-                age_is], df_val[df_val['age'] == age_is], df_test[df_test['age'] == age_is]
-            df_train_cur, df_val_cur, df_test_cur = shuffle(df_train_cur), shuffle(df_val_cur), shuffle(df_test_cur)
+    #if leave_three_train:
+        #leave_list = [20,21,22,23,24,25,26,27,28,29,30]
+    train_list = []
+    test_list = []
+    val_list = []
+    for i in leave_num:
+        age_is = leave_list[i]
+        df_train_cur, df_val_cur, df_test_cur = df_train[df_train['age'] == \
+            age_is], df_val[df_val['age'] == age_is], df_test[df_test['age'] == age_is]
+        df_train_cur, df_val_cur, df_test_cur = shuffle(df_train_cur), shuffle(df_val_cur), shuffle(df_test_cur)
+        if leave_out_train:
             if i == 0:
                 df_train_cur = df_train_cur[:args.train_number]
+                train_list.append(df_train_cur)
+            else:
+                train_list.append(df_train_cur[:1000])
+                test_list.append(df_test_cur[:1000])
+                val_list.append(df_val_cur[:1000])
+        else:
             train_list.append(df_train_cur)
-            test_list.append(df_test_cur[:1000])
-            val_list.append(df_val_cur[:1000])
+            test_list.append(df_test_cur)
+            val_list.append(df_val_cur)
         ####
-        df_train = pd.concat(train_list)
-        df_test = pd.concat(test_list)
-        df_val = pd.concat(val_list)
-        '''
-        df_train_26, df_val_26, df_test_26 = df_train[df_train['age'] == 26], df_val[df_val['age'] == 26], df_test[df_test['age'] == 26]
-        df_train_27, df_val_27, df_test_27 = df_train[df_train['age'] == 27], df_val[df_val['age'] == 27], df_test[df_test['age'] == 27]
-        df_train_28, df_val_28, df_test_28 = df_train[df_train['age'] == 28], df_val[df_val['age'] == 28], df_test[df_test['age'] == 28]
-        # train
-        # use 1000 27 and 1000 28 to train
-        df_train_26 = shuffle(df_train_26)
-        df_train_27 = shuffle(df_train_27)
-        df_train_28 = shuffle(df_train_28)
-        df_train = pd.concat([df_train_26[:args.train_number], df_train_27[:1000], df_train_28[:1000]])
-        df_train = shuffle(df_train)
-        # test
-        df_test = pd.concat([df_test_27, df_test_28])
-        df_test = shuffle(df_test)
-        # val
-        df_val = pd.concat([df_val_27, df_val_28])
-        df_val = shuffle(df_val)
-        #
-        '''    
+    df_train = pd.concat(train_list)
+    df_test = pd.concat(test_list)
+    df_val = pd.concat(val_list)
+    '''
+    df_train_26, df_val_26, df_test_26 = df_train[df_train['age'] == 26], df_val[df_val['age'] == 26], df_test[df_test['age'] == 26]
+    df_train_27, df_val_27, df_test_27 = df_train[df_train['age'] == 27], df_val[df_val['age'] == 27], df_test[df_test['age'] == 27]
+    df_train_28, df_val_28, df_test_28 = df_train[df_train['age'] == 28], df_val[df_val['age'] == 28], df_test[df_test['age'] == 28]
+    # train
+    # use 1000 27 and 1000 28 to train
+    df_train_26 = shuffle(df_train_26)
+    df_train_27 = shuffle(df_train_27)
+    df_train_28 = shuffle(df_train_28)
+    df_train = pd.concat([df_train_26[:args.train_number], df_train_27[:1000], df_train_28[:1000]])
+    df_train = shuffle(df_train)
+    # test
+    df_test = pd.concat([df_test_27, df_test_28])
+    df_test = shuffle(df_test)
+    # val
+    df_val = pd.concat([df_val_27, df_val_28])
+    df_val = shuffle(df_val)
+    #
+    '''    
 
     train_labels = df_train['age']
 
