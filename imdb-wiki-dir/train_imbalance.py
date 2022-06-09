@@ -103,15 +103,6 @@ def train_step(train_loader, pattern = 'cls', dual = False):
     if args.gpu is not None:
         print(f"Use GPU: {args.gpu} for training")
 
-    model = get_model(pattern)
-    opt = optim.SGD(model.parameters(), lr=args.lr, weight_decay=5e-4)
-
-    if pattern == 'reg':
-        criterion = nn.MSELoss()
-    elif pattern == 'cls':
-        criterion = nn.CELoss()
-    else:
-        print(" no training patterns definied ")
 
     if dual:
         model_reg = get_model('cls')
@@ -135,6 +126,14 @@ def train_step(train_loader, pattern = 'cls', dual = False):
                 opt_reg.step()
     else:
         # train
+        model = get_model(pattern)
+        opt = optim.SGD(model.parameters(), lr=args.lr, weight_decay=5e-4)
+        if pattern == 'reg':
+            criterion = nn.MSELoss()
+        elif pattern == 'cls':
+            criterion = nn.CELoss()
+        else:
+            print(" no training patterns definied ")
         model.train()
         for epoch in range(100):
             for idx, (inputs, targets) in enumerate(train_loader):
