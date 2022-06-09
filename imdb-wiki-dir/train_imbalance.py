@@ -11,7 +11,9 @@ from datasets import IMDBWIKI
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--dataset', type=str, default='imdb_wiki', choices=['imdb_wiki', 'agedb'], help='dataset name')
 parser.add_argument('--data_dir', type=str, default='./data', help='data directory')
-
+parser.add_argument('--batch_size', type=int, default=16, help='batch size')
+parser.add_argument('--workers', type=int, default=8, help='number of workers')
+parser.add_argument('--img_size', type=int, default=224, help='image size used in training')
 parser.set_defaults(augment=True)
 args, unknown = parser.parse_known_args()
 
